@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لعبة الحروف مع ترند</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- إضافة الخطوط -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- أصوات اللعبة -->
+  <audio id="snd-click" src="assets/click.mp3"></audio>
+  <audio id="snd-reveal" src="assets/reveal.mp3"></audio>
+  <audio id="snd-timeout" src="assets/timeout.mp3"></audio>
+  <audio id="snd-success" src="assets/success.mp3"></audio>
+  <audio id="snd-fail" src="assets/fail.mp3"></audio>
+  <audio id="snd-start" src="assets/start.mp3"></audio>
+  <audio id="snd-win" src="assets/win.mp3"></audio>
+</head>
+<body>
+  <!-- شريط علوي -->
+  <header class="navbar">
+    <img src="logo.png" alt="شعار اللعبة" class="logo">
+    <div class="nav-btns">
+      <button id="homeBtn" class="btn-home">الرئيسية</button>
+      <button id="rulesBtn" class="btn-rules">قواعد اللعبة</button>
+      <button class="btn-play">اللعب الآن</button>
+    </div>
+  </header>
+  
+  <div class="welcome-banner">
+    <h1>لعبة الحروف مع ترند</h1>
+    <p>اختبر معرفتك باللغة العربية في تحدي ممتع!</p>
+    <button id="startBtn" class="btn-play-big">ابدأ اللعب</button>
+  </div>
+
+  <!-- تغطية معتمة -->
+  <div class="overlay"></div>
+
+  <!-- مودال قواعد اللعبة -->
+  <div class="modal rules-modal">
+    <button class="close-btn">×</button>
+    <div class="rules-container">
+      <h2>قواعد اللعبة</h2>
+      <ul>
+        <li>اختر فريقك (الأحمر أو الأخضر)</li>
+        <li>انقر على أحد الحروف في الشبكة السداسية</li>
+        <li>أجب على السؤال الظاهر خلال الوقت المحدد (60 ثانية)</li>
+        <li>الإجابة الصحيحة تضيف نقطة لفريقك وتُلوِّن الحرف بلون فريقك</li>
+        <li>اللعب يستمر لمدة 3 دقائق (يمكن تغييره في الإعدادات)</li>
+        <li>الفريق صاحب أكبر عدد من النقاط هو الفائز</li>
+      </ul>
+      <div class="difficulty-select">
+        <h3>اختر مستوى الصعوبة:</h3>
+        <label><input type="radio" name="difficulty" value="easy" checked> سهل</label>
+        <label><input type="radio" name="difficulty" value="medium"> متوسط</label>
+        <label><input type="radio" name="difficulty" value="hard"> صعب</label>
+      </div>
+
+      <div class="time-select setting-group">
+        <h3>اختر مدة اللعب:</h3>
+        <label><input type="radio" name="gameTimeOption" value="120"> دقيقتان (120 ثانية)</label>
+        <label><input type="radio" name="gameTimeOption" value="180" checked> 3 دقائق (180 ثانية)</label>
+        <label><input type="radio" name="gameTimeOption" value="300"> 5 دقائق (300 ثانية)</label>
+        <label><input type="radio" name="gameTimeOption" value="480"> 8 دقائق (480 ثانية)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- المودال الذي يحوي اللعبة -->
+  <div class="modal game-modal">
+    <button class="close-btn">×</button>
+    <div class="game-container">
+      <!-- معلومات اللعبة والنقاط -->
+      <div class="game-header">
+        <div class="score-board">
+          <div class="team red-team">
+            <span class="team-label">الفريق الأحمر</span>
+            <span id="red-score" class="score">0</span>
+          </div>
+          <div class="timer-container">
+            <span id="timer" class="timer">180</span>
+            <span class="timer-label">ثانية</span>
+          </div>
+          <div class="team green-team">
+            <span class="team-label">الفريق الأخضر</span>
+            <span id="green-score" class="score">0</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- اختيار الفريق -->
+      <div class="team-select">
+        <label><input type="radio" name="team" value="red" checked> الفريق الأحمر</label>
+        <label><input type="radio" name="team" value="green"> الفريق الأخضر</label>
+      </div>
+
+      <h1 class="title">لعبة الحروف مع ترند</h1>
+
+      <!-- الشبكة السداسية -->
+      <div id="hexGrid" class="hex-grid"></div>
+      
+      <!-- الإرشادات -->
+      <div class="hint-text">اضغط على أحد الحروف للإجابة عن السؤال</div>
+
+      <div id="question-area" class="question-area" hidden>
+        <div class="question-container">
+          <div class="question-icon">؟</div>
+          <p id="question-text" class="question-text"></p>
+        </div>
+        <div class="controls">
+          <button id="revealBtn" class="btn-reveal">أظهر الإجابة</button>
+          <button id="undoBtn" class="btn-undo">تراجع</button>
+          <span id="question-timer" class="question-timer">60</span> ثانية
+        </div>
+        <div class="answer-container">
+          <p id="answer-text" class="answer-text"></p>
+          <div class="answer-buttons">
+            <button id="trueBtn" class="btn-answer true">خطاء</button>
+            <button id="falseBtn" class="btn-answer false">صح </button>
+          </div>
+        </div>
+        <p class="encourage"></p>
+      </div>
+      
+      <!-- نتائج اللعبة -->
+      <div id="game-results" class="game-results" hidden>
+        <h2>انتهت اللعبة!</h2>
+        <div class="results-container">
+          <div class="team-result red">
+            <h3>الفريق الأحمر</h3>
+            <div class="result-score">0</div>
+          </div>
+          <div class="trophy-container">
+            <div class="trophy">🏆</div>
+            <div id="winner-name" class="winner-name"></div>
+          </div>
+          <div class="team-result green">
+            <h3>الفريق الأخضر</h3>
+            <div class="result-score">0</div>
+          </div>
+        </div>
+        <button id="playAgainBtn" class="btn-play-again">العب مرة أخرى</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
